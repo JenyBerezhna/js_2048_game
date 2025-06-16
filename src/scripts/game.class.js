@@ -39,7 +39,7 @@ class Game {
       return 'lost';
     }
 
-    return 'running';
+    return 'playing';
   }
 
   makeMove(direction) {
