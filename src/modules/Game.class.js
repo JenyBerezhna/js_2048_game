@@ -2,7 +2,7 @@
 
 import { shiftAndMerge } from './mergeLogic.js';
 
-export default class Game {
+export class Game {
   constructor(initialState) {
     this.size = 4;
     this.board = this.createEmptyBoard();
