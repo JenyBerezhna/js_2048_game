@@ -1,8 +1,6 @@
 'use strict';
 
-import '../modules/mergeLogic.js';
-import Game from './Game.class.js';
-
+const Game = require('../modules/Game.class');
 
 document.addEventListener('DOMContentLoaded', () => {
   const game = new Game();
