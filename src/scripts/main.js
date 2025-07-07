@@ -1,6 +1,5 @@
 'use strict';
 
-// Uncomment the next lines to use your game instance in the browser
 import Game from '../modules/Game.class.js';
 import '../modules/mergeLogic.js';
 
@@ -10,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   game.start();
 
   const scoreEl = document.querySelector('.game-score');
-  const statusEl = document.querySelector('status');
+  const statusEl = document.querySelector('.status');
 
-  // unique IDs to grid cells
+  // Assign unique IDs to grid cells
   document.querySelectorAll('.field-row').forEach((row, rowIndex) => {
     row.querySelectorAll('.field-cell').forEach((cell, colIndex) => {
       cell.setAttribute('id', `cell-${rowIndex}-${colIndex}`);
@@ -42,20 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
     ArrowRight: 'right',
     ArrowUp: 'up',
     ArrowDown: 'down',
-    KeyZ: 'undo',
   };
 
   document.addEventListener('keydown', (e) => {
     const direction = keyToDirection[e.code];
 
-    if (direction === 'undo') {
-      game.undo();
-    } else if (direction && game.getStatus() === 'playing') {
+    if (direction && game.getStatus() === 'playing') {
       game.handleMove(direction);
+      updateBoard();
+      updateStatus();
     }
-
-    updateBoard();
-    updateStatus();
   });
 
   document.querySelectorAll('.start, .restart').forEach((btn) => {
