@@ -1,7 +1,8 @@
 'use strict';
 
-import Game from '../modules/Game.class.js';
 import '../modules/mergeLogic.js';
+import Game from './Game.class.js';
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const game = new Game();

@@ -1,49 +1,68 @@
 'use strict';
 
-import { shiftAndMerge } from './mergeLogic.js';
+const { shiftAndMerge } = require('./mergeLogic.js');
 
-export class Game {
+class Game {
   constructor(initialState) {
     this.size = 4;
     this.board = this.createEmptyBoard();
     this.score = 0;
     this.status = 'idle';
     this.hasWon = false;
-    this.previousBoard = null;
-    this.previousScore = null;
 
-    if (Array.isArray(initialState)) {
+    if (
+      Array.isArray(initialState) &&
+      initialState.length === this.size &&
+      initialState.every(
+        (row) => Array.isArray(row) && row.length === this.size,
+      )
+    ) {
       this.board = initialState.map((row) => [...row]);
       this.status = this.getStatus();
     }
+
+    // eslint-disable-next-line no-console
+    console.log('Game initialized:', this.board);
   }
 
   createEmptyBoard() {
     return Array.from({ length: this.size }, () => Array(this.size).fill(0));
   }
 
-  getState() {
-    return this.board.map((row) => [...row]);
-  }
-
+  /**
+   * @returns {number}
+   */
   getScore() {
     return this.score;
   }
 
+  /**
+   * @returns {number[][]}
+   */
+  getState() {
+    return this.board.map((row) => [...row]);
+  }
+
+  /**
+   * @returns {string} One of: 'idle', 'playing', 'win', 'lose'
+   */
   getStatus() {
     if (this.hasWon || this.board.flat().includes(2048)) {
       this.hasWon = true;
 
-      return 'Winner! Congrats! You did it!';
+      return 'win';
     }
 
     if (!this.canMove()) {
-      return 'You lose! Restart the game?';
+      return 'lose';
     }
 
-    return this.status === 'idle' ? 'idle' : 'playing';
+    return this.status;
   }
 
+  /**
+   * Starts the game.
+   */
   start() {
     this.board = this.createEmptyBoard();
     this.score = 0;
@@ -53,19 +72,34 @@ export class Game {
     this.spawnTile();
   }
 
+  /**
+   * Resets the game.
+   */
   restart() {
     this.start();
   }
 
-  undo() {
-    if (!this.previousBoard) {
-      return;
-    }
-    this.board = JSON.parse(this.previousBoard);
-    this.score = this.previousScore;
+  moveLeft() {
+    this.handleMove('left');
+  }
+
+  moveRight() {
+    this.handleMove('right');
+  }
+
+  moveUp() {
+    this.handleMove('up');
+  }
+
+  moveDown() {
+    this.handleMove('down');
   }
 
   handleMove(direction) {
+    if (this.status !== 'playing') {
+      return;
+    }
+
     const prev = JSON.stringify(this.board);
     const { board: newBoard, totalScore } = shiftAndMerge(
       this.board,
@@ -73,8 +107,6 @@ export class Game {
     );
 
     if (prev !== JSON.stringify(newBoard)) {
-      this.previousBoard = prev;
-      this.previousScore = this.score;
       this.board = newBoard;
       this.score += totalScore;
       this.spawnTile();
@@ -106,9 +138,11 @@ export class Game {
       return;
     }
 
-    const randomIndex = Math.floor(Math.random() * emptyCells.length);
-    const [row, col] = emptyCells[randomIndex];
+    const [row, col] =
+      emptyCells[Math.floor(Math.random() * emptyCells.length)];
 
     this.board[row][col] = Math.random() < 0.9 ? 2 : 4;
   }
 }
+
+module.exports = Game;
