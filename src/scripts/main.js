@@ -1,57 +1,71 @@
 'use strict';
 
 // Uncomment the next lines to use your game instance in the browser
-const Game = require('../modules/Game.class');
+import Game from '../modules/Game.class.js';
+import '../modules/mergeLogic.js';
 
-const game = new Game();
+document.addEventListener('DOMContentLoaded', () => {
+  const game = new Game();
 
-updateBoard();
-updateStatus();
+  game.start();
 
-const keyToMethod = {
-  ArrowLeft: 'moveLeft',
-  ArrowRight: 'moveRight',
-  ArrowUp: 'moveUp',
-  ArrowDown: 'moveDown',
-};
+  const scoreEl = document.querySelector('.game-score');
+  const statusEl = document.querySelector('status');
 
-document.addEventListener('keydown', (e) => {
-  if (keyToMethod[e.key]) {
-    game[keyToMethod[e.key]]();
-    updateBoard();
-    updateStatus();
-  }
-});
-
-document.querySelectorAll('.start, .restart').forEach((button) => {
-  button.addEventListener('click', () => {
-    game.restart();
-    updateBoard();
-    updateStatus();
-  });
-});
-
-function updateBoard() {
-  const board = game.getState();
-
-  board.forEach((row, rowIndex) => {
-    row.forEach((cellValue, colIndex) => {
-      const cell = document.getElementById(`cell-${rowIndex}-${colIndex}`);
-
-      cell.className = 'field-cell';
-
-      if (cellValue > 0) {
-        cell.textContent = cellValue;
-        cell.classList.add(`field-cell--${cellValue}`);
-      } else {
-        cell.textContent = '';
-        cell.classList.add('hidden');
-      }
+  // unique IDs to grid cells
+  document.querySelectorAll('.field-row').forEach((row, rowIndex) => {
+    row.querySelectorAll('.field-cell').forEach((cell, colIndex) => {
+      cell.setAttribute('id', `cell-${rowIndex}-${colIndex}`);
     });
   });
-}
 
-function updateStatus() {
-  document.getElementById('score').textContent = `Score: ${game.getScore()}`;
-  document.getElementById('status').textContent = `Status: ${game.getStatus()}`;
-}
+  const updateBoard = () => {
+    const board = game.getState();
+
+    board.forEach((row, rowIndex) => {
+      row.forEach((val, colIndex) => {
+        const cell = document.getElementById(`cell-${rowIndex}-${colIndex}`);
+
+        cell.className = `field-cell ${val === 0 ? 'hidden' : `field-cell--${val}`}`;
+        cell.textContent = val === 0 ? '' : val;
+      });
+    });
+  };
+
+  const updateStatus = () => {
+    scoreEl.textContent = `Score: ${game.getScore()}`;
+    statusEl.textContent = `Status: ${game.getStatus()}`;
+  };
+
+  const keyToDirection = {
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+    ArrowUp: 'up',
+    ArrowDown: 'down',
+    KeyZ: 'undo',
+  };
+
+  document.addEventListener('keydown', (e) => {
+    const direction = keyToDirection[e.code];
+
+    if (direction === 'undo') {
+      game.undo();
+    } else if (direction && game.getStatus() === 'playing') {
+      game.handleMove(direction);
+    }
+
+    updateBoard();
+    updateStatus();
+  });
+
+  document.querySelectorAll('.start, .restart').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      game.restart();
+      updateBoard();
+      updateStatus();
+    });
+  });
+
+  updateBoard();
+  updateStatus();
+});

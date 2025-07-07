@@ -1,68 +1,114 @@
 'use strict';
 
-/**
- * This class represents the game.
- * Now it has a basic structure, that is needed for testing.
- * Feel free to add more props and methods if needed.
- */
-class Game {
-  /**
-   * Creates a new game instance.
-   *
-   * @param {number[][]} initialState
-   * The initial state of the board.
-   * @default
-   * [[0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0],
-   *  [0, 0, 0, 0]]
-   *
-   * If passed, the board will be initialized with the provided
-   * initial state.
-   */
+import { shiftAndMerge } from './mergeLogic.js';
+
+export default class Game {
   constructor(initialState) {
-    // eslint-disable-next-line no-console
-    console.log(initialState);
+    this.size = 4;
+    this.board = this.createEmptyBoard();
+    this.score = 0;
+    this.status = 'idle';
+    this.hasWon = false;
+    this.previousBoard = null;
+    this.previousScore = null;
+
+    if (Array.isArray(initialState)) {
+      this.board = initialState.map((row) => [...row]);
+      this.status = this.getStatus();
+    }
   }
 
-  moveLeft() {}
-  moveRight() {}
-  moveUp() {}
-  moveDown() {}
+  createEmptyBoard() {
+    return Array.from({ length: this.size }, () => Array(this.size).fill(0));
+  }
 
-  /**
-   * @returns {number}
-   */
-  getScore() {}
+  getState() {
+    return this.board.map((row) => [...row]);
+  }
 
-  /**
-   * @returns {number[][]}
-   */
-  getState() {}
+  getScore() {
+    return this.score;
+  }
 
-  /**
-   * Returns the current game status.
-   *
-   * @returns {string} One of: 'idle', 'playing', 'win', 'lose'
-   *
-   * `idle` - the game has not started yet (the initial state);
-   * `playing` - the game is in progress;
-   * `win` - the game is won;
-   * `lose` - the game is lost
-   */
-  getStatus() {}
+  getStatus() {
+    if (this.hasWon || this.board.flat().includes(2048)) {
+      this.hasWon = true;
 
-  /**
-   * Starts the game.
-   */
-  start() {}
+      return 'Winner! Congrats! You did it!';
+    }
 
-  /**
-   * Resets the game.
-   */
-  restart() {}
+    if (!this.canMove()) {
+      return 'You lose! Restart the game?';
+    }
 
-  // Add your own methods here
+    return this.status === 'idle' ? 'idle' : 'playing';
+  }
+
+  start() {
+    this.board = this.createEmptyBoard();
+    this.score = 0;
+    this.status = 'playing';
+    this.hasWon = false;
+    this.spawnTile();
+    this.spawnTile();
+  }
+
+  restart() {
+    this.start();
+  }
+
+  undo() {
+    if (!this.previousBoard) {
+      return;
+    }
+    this.board = JSON.parse(this.previousBoard);
+    this.score = this.previousScore;
+  }
+
+  handleMove(direction) {
+    const prev = JSON.stringify(this.board);
+    const { board: newBoard, totalScore } = shiftAndMerge(
+      this.board,
+      direction,
+    );
+
+    if (prev !== JSON.stringify(newBoard)) {
+      this.previousBoard = prev;
+      this.previousScore = this.score;
+      this.board = newBoard;
+      this.score += totalScore;
+      this.spawnTile();
+    }
+
+    this.status = this.getStatus();
+  }
+
+  canMove() {
+    return ['up', 'down', 'left', 'right'].some((dir) => {
+      const { board: moved } = shiftAndMerge(this.board, dir);
+
+      return JSON.stringify(moved) !== JSON.stringify(this.board);
+    });
+  }
+
+  spawnTile() {
+    const emptyCells = [];
+
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        if (this.board[r][c] === 0) {
+          emptyCells.push([r, c]);
+        }
+      }
+    }
+
+    if (emptyCells.length === 0) {
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const [row, col] = emptyCells[randomIndex];
+
+    this.board[row][col] = Math.random() < 0.9 ? 2 : 4;
+  }
 }
-
-module.exports = Game;
