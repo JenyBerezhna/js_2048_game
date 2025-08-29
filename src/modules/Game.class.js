@@ -5,28 +5,42 @@ const { shiftAndMerge } = require('./mergeLogic.js');
 class Game {
   constructor(initialState) {
     this.size = 4;
-    this.board = this.createEmptyBoard();
     this.score = 0;
     this.status = 'idle';
     this.hasWon = false;
 
-    if (
-      Array.isArray(initialState) &&
-      initialState.length === this.size &&
-      initialState.every(
-        (row) => Array.isArray(row) && row.length === this.size,
-      )
-    ) {
+    if (this.isValidBoard(initialState)) {
       this.board = initialState.map((row) => [...row]);
       this.status = this.getStatus();
+    } else {
+      this.board = this.createEmptyBoard();
     }
 
     // eslint-disable-next-line no-console
     console.log('Game initialized:', this.board);
   }
 
+  /**
+   * Creates an empty board (4x4 filled with zeros)
+   */
   createEmptyBoard() {
     return Array.from({ length: this.size }, () => Array(this.size).fill(0));
+  }
+
+  /**
+   * Validates a board structure and values
+   */
+  isValidBoard(board) {
+    return (
+      Array.isArray(board) &&
+      board.length === this.size &&
+      board.every(
+        (row) =>
+          Array.isArray(row) &&
+          row.length === this.size &&
+          row.every((cell) => Number.isInteger(cell) && cell >= 0),
+      )
+    );
   }
 
   /**
@@ -57,11 +71,11 @@ class Game {
       return 'lose';
     }
 
-    return this.status;
+    return this.status === 'idle' ? 'playing' : this.status;
   }
 
   /**
-   * Starts the game.
+   * Starts a new game.
    */
   start() {
     this.board = this.createEmptyBoard();
@@ -73,40 +87,24 @@ class Game {
   }
 
   /**
-   * Resets the game.
+   * Restarts the game.
    */
   restart() {
     this.start();
   }
 
-  moveLeft() {
-    this.handleMove('left');
-  }
-
-  moveRight() {
-    this.handleMove('right');
-  }
-
-  moveUp() {
-    this.handleMove('up');
-  }
-
-  moveDown() {
-    this.handleMove('down');
-  }
-
+  /**
+   * Handles a move in a given direction
+   */
   handleMove(direction) {
     if (this.status !== 'playing') {
       return;
     }
 
-    const prev = JSON.stringify(this.board);
-    const { board: newBoard, totalScore } = shiftAndMerge(
-      this.board,
-      direction,
-    );
+    const prevBoard = this.board;
+    const { board: newBoard, totalScore } = shiftAndMerge(prevBoard, direction);
 
-    if (prev !== JSON.stringify(newBoard)) {
+    if (!this.boardsEqual(prevBoard, newBoard)) {
       this.board = newBoard;
       this.score += totalScore;
       this.spawnTile();
@@ -115,15 +113,41 @@ class Game {
     this.status = this.getStatus();
   }
 
+  /**
+   * Moves in each direction
+   */
+  moveLeft() {
+    this.handleMove('left');
+  }
+  moveRight() {
+    this.handleMove('right');
+  }
+  moveUp() {
+    this.handleMove('up');
+  }
+  moveDown() {
+    this.handleMove('down');
+  }
+
+  /**
+   * Checks if any move is possible
+   */
   canMove() {
     return ['up', 'down', 'left', 'right'].some((dir) => {
       const { board: moved } = shiftAndMerge(this.board, dir);
 
-      return JSON.stringify(moved) !== JSON.stringify(this.board);
+      return !this.boardsEqual(this.board, moved);
     });
   }
 
+  /**
+   * Spawns a new tile (2 or 4) at a random empty position
+   */
   spawnTile() {
+    if (this.status !== 'playing') {
+      return;
+    }
+
     const emptyCells = [];
 
     for (let r = 0; r < this.size; r++) {
@@ -142,6 +166,21 @@ class Game {
       emptyCells[Math.floor(Math.random() * emptyCells.length)];
 
     this.board[row][col] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  /**
+   * Checks if two boards are equal
+   */
+  boardsEqual(b1, b2) {
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        if (b1[r][c] !== b2[r][c]) {
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 }
 
