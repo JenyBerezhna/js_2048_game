@@ -1,6 +1,7 @@
 export function shiftAndMerge(board, direction) {
-  const transpose = (m) => m[0].map((_, i) => m.map((row) => row[i]));
-  const reverse = (m) => m.map((row) => [...row].reverse());
+  const transpose = (matrix) =>
+    matrix[0].map((_, i) => matrix.map((row) => row[i]));
+  const reverse = (matrix) => matrix.map((row) => [...row].reverse());
 
   const rotate = {
     up: transpose,

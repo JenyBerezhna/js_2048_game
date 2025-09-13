@@ -6,22 +6,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const game = new Game();
 
   const scoreEl = document.querySelector('.game-score');
-  const statusEl = document.querySelector('.status');
-  const startBtn = document.querySelector('.start');
-  const restartBtn = document.querySelector('.restart');
+  const startBtn = document.querySelector('.button.start');
+  const startMessageEl = document.querySelector('.message-start');
+  const winMessageEl = document.querySelector('.message-win');
+  const loseMessageEl = document.querySelector('.message-lose');
 
-  // Assign IDs to grid cells
+  // Assign unique IDs to grid cells
   document.querySelectorAll('.field-row').forEach((row, rowIndex) => {
     row.querySelectorAll('.field-cell').forEach((cell, colIndex) => {
       cell.id = `cell-${rowIndex}-${colIndex}`;
     });
   });
 
-  let gameEnded = false;
+  let hasStarted = false;
 
-  /**
-   * Updates the board UI based on the game state
-   */
   const updateBoard = () => {
     const board = game.getState();
 
@@ -29,14 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
       for (let c = 0; c < board[r].length; c++) {
         const cell = document.getElementById(`cell-${r}-${c}`);
         const val = board[r][c];
-
-        const newClass = `field-cell ${
-          val === 0 ? 'empty' : `field-cell--${val}`
-        }`;
+        const newClass = `field-cell ${val === 0 ? 'empty' : `field-cell--${val}`}`;
 
         if (
-          cell.className !== newClass ||
-          cell.textContent !== String(val || '')
+          cell &&
+          (cell.className !== newClass ||
+            cell.textContent !== String(val || ''))
         ) {
           cell.className = newClass;
           cell.textContent = val || '';
@@ -45,43 +41,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  /**
-   * Updates the score and status text
-   */
-  const updateStatus = () => {
-    scoreEl.textContent = `Score: ${game.getScore()}`;
-    statusEl.textContent = `Status: ${game.getStatus()}`;
+  const updateScore = () => {
+    scoreEl.textContent = game.getScore().toString();
   };
 
-  /**
-   * Ends the game visually (alerts only once)
-   */
+  const resetMessages = () => {
+    startMessageEl.classList.add('hidden');
+    winMessageEl.classList.add('hidden');
+    loseMessageEl.classList.add('hidden');
+  };
+
+  const updateStartButton = () => {
+    startBtn.textContent = 'Restart';
+    startBtn.classList.remove('start');
+    startBtn.classList.add('restart');
+  };
+
   const checkEndGame = () => {
     const stat = game.getStatus();
 
-    if (!gameEnded && (stat === 'win' || stat === 'lose')) {
-      gameEnded = true;
-      alert(stat === 'win' ? 'You Win!' : 'Game Over!');
+    if (stat === 'win') {
+      winMessageEl.classList.remove('hidden');
+      alert('You Win!');
+    } else if (stat === 'lose') {
+      loseMessageEl.classList.remove('hidden');
+      alert('Game Over!');
     }
   };
 
-  /**
-   * Handles a move if game is active
-   */
   const processMove = (direction) => {
-    if (game.getStatus() === 'idle') {
-      game.start();
+    if (!hasStarted) {
+      return;
     }
 
     if (game.getStatus() === 'playing') {
       game.handleMove(direction);
       updateBoard();
-      updateStatus();
+      updateScore();
       checkEndGame();
     }
   };
 
-  // Keyboard input handling
   const keyToDirection = {
     ArrowLeft: 'left',
     ArrowRight: 'right',
@@ -99,21 +99,20 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   startBtn.addEventListener('click', () => {
-    game.start();
-    gameEnded = false;
+    if (!hasStarted) {
+      game.start();
+      hasStarted = true;
+      resetMessages();
+      updateStartButton();
+    } else {
+      game.restart();
+    }
+
     updateBoard();
-    updateStatus();
+    updateScore();
   });
 
-  restartBtn.addEventListener('click', () => {
-    game.restart();
-    gameEnded = false;
-    updateBoard();
-    updateStatus();
-  });
-
-  // Auto-start game when page loads
-  game.start();
+  // Initial render (no auto-start)
   updateBoard();
-  updateStatus();
+  updateScore();
 });
