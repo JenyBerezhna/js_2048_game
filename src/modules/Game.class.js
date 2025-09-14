@@ -9,27 +9,18 @@ class Game {
     this.status = 'idle';
     this.hasWon = false;
 
-    if (this.isValidBoard(initialState)) {
-      this.board = initialState.map((row) => [...row]);
-      this.status = this.getStatus();
-    } else {
-      this.board = this.createEmptyBoard();
-    }
+    this.board = this.isValidBoard(initialState)
+      ? initialState.map((row) => [...row])
+      : this.createEmptyBoard();
 
-    // eslint-disable-next-line no-console
-    console.log('Game initialized:', this.board);
+    // Initial status check
+    this.updateStatus();
   }
 
-  /**
-   * Creates an empty board (4x4 filled with zeros)
-   */
   createEmptyBoard() {
     return Array.from({ length: this.size }, () => Array(this.size).fill(0));
   }
 
-  /**
-   * Validates a board structure and values
-   */
   isValidBoard(board) {
     return (
       Array.isArray(board) &&
@@ -43,40 +34,18 @@ class Game {
     );
   }
 
-  /**
-   * @returns {number}
-   */
   getScore() {
     return this.score;
   }
 
-  /**
-   * @returns {number[][]}
-   */
   getState() {
     return this.board.map((row) => [...row]);
   }
 
-  /**
-   * @returns {string} One of: 'idle', 'playing', 'win', 'lose'
-   */
   getStatus() {
-    if (this.hasWon || this.board.flat().includes(2048)) {
-      this.hasWon = true;
-
-      return 'win';
-    }
-
-    if (!this.canMove()) {
-      return 'lose';
-    }
-
-    return this.status === 'idle' ? 'playing' : this.status;
+    return this.status;
   }
 
-  /**
-   * Starts a new game.
-   */
   start() {
     this.board = this.createEmptyBoard();
     this.score = 0;
@@ -86,16 +55,10 @@ class Game {
     this.spawnTile();
   }
 
-  /**
-   * Restarts the game.
-   */
   restart() {
     this.start();
   }
 
-  /**
-   * Handles a move in a given direction
-   */
   handleMove(direction) {
     if (this.status !== 'playing') {
       return;
@@ -107,31 +70,36 @@ class Game {
     if (!this.boardsEqual(prevBoard, newBoard)) {
       this.board = newBoard;
       this.score += totalScore;
-      this.spawnTile();
-    }
 
-    this.status = this.getStatus();
+      // Check for win before spawning a tile
+      if (!this.hasWon && this.board.flat().some((val) => val >= 2048)) {
+        this.hasWon = true;
+        this.status = 'win';
+
+        return;
+      }
+
+      this.spawnTile();
+      this.updateStatus();
+    }
   }
 
-  /**
-   * Moves in each direction
-   */
   moveLeft() {
     this.handleMove('left');
   }
+
   moveRight() {
     this.handleMove('right');
   }
+
   moveUp() {
     this.handleMove('up');
   }
+
   moveDown() {
     this.handleMove('down');
   }
 
-  /**
-   * Checks if any move is possible
-   */
   canMove() {
     return ['up', 'down', 'left', 'right'].some((dir) => {
       const { board: moved } = shiftAndMerge(this.board, dir);
@@ -140,9 +108,6 @@ class Game {
     });
   }
 
-  /**
-   * Spawns a new tile (2 or 4) at a random empty position
-   */
   spawnTile() {
     if (this.status !== 'playing') {
       return;
@@ -168,19 +133,18 @@ class Game {
     this.board[row][col] = Math.random() < 0.9 ? 2 : 4;
   }
 
-  /**
-   * Checks if two boards are equal
-   */
   boardsEqual(b1, b2) {
-    for (let r = 0; r < this.size; r++) {
-      for (let c = 0; c < this.size; c++) {
-        if (b1[r][c] !== b2[r][c]) {
-          return false;
-        }
-      }
-    }
+    return b1.every((row, r) => row.every((val, c) => val === b2[r][c]));
+  }
 
-    return true;
+  updateStatus() {
+    if (this.hasWon) {
+      this.status = 'win';
+    } else if (!this.canMove()) {
+      this.status = 'lose';
+    } else if (this.status === 'idle') {
+      this.status = 'playing';
+    }
   }
 }
 
