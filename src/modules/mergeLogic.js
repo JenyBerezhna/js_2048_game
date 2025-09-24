@@ -1,4 +1,4 @@
-export function shiftAndMerge(board, direction) {
+function shiftAndMerge(board, direction) {
   const transpose = (matrix) =>
     matrix[0].map((_, i) => matrix.map((row) => row[i]));
   const reverse = (matrix) => matrix.map((row) => [...row].reverse());
@@ -54,3 +54,5 @@ function mergeRow(row) {
 
   return { merged: result, mergeScore: score };
 }
+
+module.exports = { shiftAndMerge };

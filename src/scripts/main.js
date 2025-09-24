@@ -1,6 +1,6 @@
 'use strict';
 
-const Game = require('../modules/Game.class');
+const Game = require('../modules/Game.class.js');
 
 document.addEventListener('DOMContentLoaded', () => {
   const game = new Game();
@@ -62,10 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (stat === 'win') {
       winMessageEl.classList.remove('hidden');
-      alert('You Win!');
     } else if (stat === 'lose') {
       loseMessageEl.classList.remove('hidden');
-      alert('Game Over!');
     }
   };
 
