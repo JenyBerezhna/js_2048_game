@@ -3,7 +3,7 @@
 const { shiftAndMerge } = require('./mergeLogic.js');
 
 class Game {
-  constructor(initialState) {
+  constructor(initialState = null) {
     this.size = 4;
     this.score = 0;
     this.status = 'idle';

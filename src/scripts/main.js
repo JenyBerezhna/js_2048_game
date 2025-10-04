@@ -57,12 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
     startBtn.classList.add('restart');
   };
 
-  const checkEndGame = () => {
-    const stat = game.getStatus();
-
-    if (stat === 'win') {
+  const checkEndGame = (gameStatus) => {
+    if (gameStatus === 'win') {
       winMessageEl.classList.remove('hidden');
-    } else if (stat === 'lose') {
+    } else if (gameStatus === 'lose') {
       loseMessageEl.classList.remove('hidden');
     }
   };
@@ -72,11 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (game.getStatus() === 'playing') {
+    const gameStatus = game.getStatus();
+
+    if (gameStatus === 'playing') {
       game.handleMove(direction);
       updateBoard();
       updateScore();
-      checkEndGame();
+      checkEndGame(game.getStatus());
     }
   };
 
@@ -97,20 +97,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   startBtn.addEventListener('click', () => {
+    resetMessages();
+
     if (!hasStarted) {
       game.start();
       hasStarted = true;
-      resetMessages();
       updateStartButton();
     } else {
       game.restart();
+      resetMessages();
     }
 
     updateBoard();
     updateScore();
   });
 
-  // Initial render (no auto-start)
   updateBoard();
   updateScore();
 });
